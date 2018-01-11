@@ -1,0 +1,129 @@
+#!/bin/bash
+# 这是一个可视化的rdesktop运行配置脚本，支持可视化的配置，可以保存配置并在下次运行时自动读取配置
+# 作者：大麦  website:http://zhuyalin.cn
+# 欢迎使用修改，但请保留原作者信息
+
+checkfile(){
+if [ -f ~/.rdesktop.conf ]; then 
+dialog --title "提示" --backtitle "远程桌面设置" --clear --yesno "发现配置文件，是否读取" 16 51
+x=$?
+
+if [ "$x" -ne 1 ]; then
+    CHOICE2='YES'
+fi
+
+if [ -n "$CHOICE2" ]; then
+cat ~/.rdesktop.conf | while read line
+do
+  command="${line}"
+  ${command} &
+done
+else
+    ip
+fi
+
+fi     
+}
+
+
+ip(){
+TMP="/tmp/tmp.$$"
+dialog --title "设置远程主机IP" --backtitle "远程桌面设置" --clear --inputbox  "请输入远程主机IP" 16 51 2>$TMP
+IP=$(cat $TMP)
+rm -f "$TMP"
+username
+}
+
+username(){
+TMP="/tmp/tmp.$$"  
+dialog --title "设置登录用户名" --backtitle "远程桌面设置" --clear --inputbox  "请输入登录的用户名" 16 51 2>$TMP
+USERNAME=$(cat $TMP)
+[ -z "$USERNAME" ] && USERNAME="administrator"
+rm -f "$TMP" 
+depth
+}
+
+depth(){
+TMP="/tmp/tmp.$$"
+dialog --title "设置桌面颜色深度" --backtitle "远程桌面设置" --clear --menu "请选择颜色深度" 16 51 4 \
+  "8" "位" \
+  "16" "位"\
+  "32" "位" 2>$TMP
+DEPTH=$(cat $TMP)
+[ -z "$DEPTH" ] && DEPTH="32"
+rm -f "$TMP"
+geometry
+}
+
+geometry(){
+TMP="/tmp/tmp.$$"  
+dialog --title "设置桌面分辨率" --backtitle "远程桌面设置" --clear --inputbox  "请输入桌面分辨率(eg:1200x600)" 16 51 2>$TMP
+GEOMETRY=$(cat $TMP)
+[ -z "$GEOMETRY" ] && GEOMETRY="1200x680"
+rm -f "$TMP" 
+other1    
+}
+
+other1(){
+TMP="/tmp/tmp.$$"  
+dialog --title "选择其他选项" --backtitle "远程桌面设置" --clear --menu "请选择附加功能" 16 51 4 "-r sound:remote" "在远程主机上播放声音"  "-r sound:local" "在本机上播放声音" 2>$TMP
+OTHER1=$(cat $TMP)
+[ -z "$OTHER1" ] && OTHER1="-r sound:remote"
+rm -f "$TMP"  
+other2   
+}
+
+other2(){
+dialog --title "选择其他选项" --backtitle "远程桌面设置" --clear --yesno "是否共享剪贴板" 16 51
+x=$?
+if [ "$x" -ne 0 ]; then
+    CHOICE='NO'
+fi
+
+if [ -n "$CHOICE" ]; then
+    OTHER2=""
+else
+    OTHER2="-r clipboard:PRIMARYCLIPBOARD"
+fi
+disk
+}
+
+save(){
+command="/usr/bin/rdesktop "${IP}" -u "${USERNAME}" -a "${DEPTH}" -g "${GEOMETRY}"  "${OTHER1}"  "${OTHER2}"  "${DOCUMENT}
+dialog --title "保存配置" --backtitle "远程桌面设置" --clear --yesno "是否保存配置？" 16 51
+x=$?
+if [ "$x" -ne 0 ]; then
+    CHOICE1='NO'
+fi
+
+if [ -n "$CHOICE1" ]; then
+    OTHER2=""
+else
+    echo "${command}">~/.rdesktop.conf
+fi
+}
+
+disk(){
+    
+dialog --title "挂载文件夹" --backtitle "远程桌面设置" --clear --yesno "是否挂载本地文件夹到远程机？" 16 51
+x=$?
+if [ "$x" -ne 1 ]; then
+    CHOICE5='YES'
+fi
+
+if [ -n "$CHOICE5" ]; then
+TMP="/tmp/tmp.$$"
+dialog --title "挂载文件夹" --backtitle "远程桌面设置" --clear --inputbox  "请输入准备挂载的文件夹路径" 16 51 2>$TMP
+docpath=$(cat $TMP)
+DOCUMENT="-r disk:z="${docpath}
+rm -f "$TMP"
+else
+DOCUMENT=""
+fi
+
+save
+}
+
+
+checkfile
+${command} &
