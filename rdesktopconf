@@ -1,27 +1,31 @@
 #!/bin/bash
 # 这是一个可视化的rdesktop运行配置脚本，支持可视化的配置，可以保存配置并在下次运行时自动读取配置
-# 作者：大麦  website:http://zhuyalin.cn
+# 作者：大麦
+# https://github.com/cloudpen/rdesktopconf
+# http://ails.top
 # 欢迎使用修改，但请保留原作者信息
 
 checkfile(){
-if [ -f ~/.rdesktop.conf ]; then 
+
+if [ -f ~/.rdesktop.conf ];then 
 dialog --title "提示" --backtitle "远程桌面设置" --clear --yesno "发现配置文件，是否读取" 16 51
 x=$?
 
-if [ "$x" -ne 1 ]; then
-    CHOICE2='YES'
-fi
+    if [ "$x" -ne 1 ]; then
+        CHOICE2='YES'
+    fi
 
-if [ -n "$CHOICE2" ]; then
-cat ~/.rdesktop.conf | while read line
-do
-  command="${line}"
-  ${command} &
-done
+    if [ -n "$CHOICE2" ]; then
+       cat ~/.rdesktop.conf | while read line
+       do
+         command="${line}"
+         ${command} &
+       done
+    else
+       ip    
+    fi
 else
     ip
-fi
-
 fi     
 }
 
@@ -123,7 +127,6 @@ fi
 
 save
 }
-
 
 checkfile
 ${command} &
